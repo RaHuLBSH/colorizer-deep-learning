@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Colorization App</title>
+</head>
+<body>
+    <h1>Photo Colorization App</h1>
+    <form method="post" enctype="multipart/form-data">
+        <label for="bw_image">Upload Black and White Photo:</label>
+        <input type="file" name="bw_image" accept=".jpg, .jpeg, .png" required>
+        <br>
+        <label for="feedback">User Feedback:</label>
+        <textarea name="feedback" rows="3" cols="30"></textarea>
+        <br>
+        <button type="submit">Colorize Photo</button>
+    </form>
+    {% if colorized_image %}
+        <h2>Colorized Photo:</h2>
+        <img src="data:image/png;base64,{{ colorized_image }}" alt="Colorized Photo">
+    {% endif %}
+</body>
+</html>
