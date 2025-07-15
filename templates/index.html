@@ -1,24 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photo Colorization App</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Photo Colorization App</title>
+  <script src="https://unpkg.com/htmx.org@1.9.5"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Photo Colorization App</h1>
-    <form method="post" enctype="multipart/form-data">
-        <label for="bw_image">Upload Black and White Photo:</label>
-        <input type="file" name="bw_image" accept=".jpg, .jpeg, .png" required>
-        <br>
-        <label for="feedback">User Feedback:</label>
-        <textarea name="feedback" rows="3" cols="30"></textarea>
-        <br>
-        <button type="submit">Colorize Photo</button>
+<body class="bg-gray-100 text-gray-800 min-h-screen p-4">
+  <div class="max-w-xl mx-auto bg-white shadow-xl rounded-xl p-6 space-y-4">
+    <h1 class="text-2xl font-bold mb-4 text-center">🖼️ Photo Colorization App</h1>
+
+    
+    <form 
+        id="colorize-form"
+        method="POST" 
+        enctype="multipart/form-data"
+        hx-post="/"
+        hx-trigger="submit"
+        hx-on="htmx:afterRequest: renderColorizedImage(event)"
+        hx-target="this"
+        hx-swap="none" 
+        class="space-y-4"
+    >
+      <div>
+        <label for="bw_image" class="font-semibold block mb-1">Upload Black & White Photo:</label>
+        <input 
+          type="file" 
+          name="bw_image" 
+          id="bw_image" 
+          accept=".jpg,.jpeg,.png" 
+          required 
+          class="block w-full p-2 border rounded"
+          onchange="previewImage(this)"
+        />
+      </div>
+
+      <div>
+        <label for="feedback" class="font-semibold block mb-1">User Feedback (optional):</label>
+        <textarea 
+          name="feedback" 
+          rows="3" 
+          class="block w-full p-2 border rounded resize-none"
+        ></textarea>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          🎨 Colorize Photo
+        </button>
+        <div id="loading" class="htmx-indicator text-sm text-gray-500">Processing image...</div>
+      </div>
     </form>
-    {% if colorized_image %}
-        <h2>Colorized Photo:</h2>
-        <img src="data:image/png;base64,{{ colorized_image }}" alt="Colorized Photo">
-    {% endif %}
+
+    <div id="preview" class="mt-4 hidden">
+      <h2 class="font-semibold mb-2">Original Image Preview:</h2>
+      <img id="preview-img" src="" alt="Preview" class="w-full rounded border"/>
+    </div>
+
+    <div id="result" class="mt-6"></div>
+  </div>
+
+  <script>
+    function previewImage(input) {
+      const preview = document.getElementById('preview');
+      const img = document.getElementById('preview-img');
+
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          img.src = e.target.result;
+          preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+    function renderColorizedImage(event) {
+        const response = event.detail.xhr.responseText;
+        try {
+          const data = JSON.parse(response);
+          const resultDiv = document.getElementById('result');
+
+          if (data.error) {
+              resultDiv.innerHTML = `<p class="text-red-600">Error: ${data.error}</p>`;
+          } else {
+              resultDiv.innerHTML = `
+              <h2 class="text-lg font-semibold mb-2">🌈 Colorized Photo:</h2>
+              <img src="data:image/jpg;base64,${data.image}" 
+                  alt="Colorized Result"
+                  class="w-full rounded shadow-md"/>
+              `;
+          }
+        } catch (err) {
+          console.error("Invalid JSON response", err);
+        }
+    }
+    document.body.addEventListener("htmx:afterOnLoad", function (evt) {
+      const target = evt.detail.target;
+      if (target && target.id === "result") {
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+    </script>
+
 </body>
 </html>
